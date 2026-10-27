@@ -229,7 +229,7 @@ const S = {
   ready: false, offline: false
 };
 let db = null;
-const UI = { tab: "accueil", weekStart: monday(today()), coursesTri: "rayon", budgetVue: "mois", recFiltre: "Toutes" };
+const UI = { tab: "accueil", weekStart: monday(today()), coursesTri: "rayon", budgetVue: "mois", recFiltre: "Toutes", recTri: "az" };
 
 const R = id => S.rec?.find(r => r.id === id);
 const I = id => S.ing?.[id];
@@ -244,7 +244,8 @@ function midiInfo(d) {
   const m = getDay(d).midi;
   if (m.congel) return { src: "congel", rec: R(m.congel) };
   const prev = getDay(add(d, -1)).soir;
-  if (prev.recette && prev.statut !== "absent" && !prev.congele) return { src: "frigo", rec: R(prev.recette) };
+  const reste = 2 - (prev.congele === true ? 2 : (+prev.congele || 0));
+  if (prev.recette && prev.statut !== "absent" && reste > 0) return { src: "frigo", rec: R(prev.recette), reste };
   return { src: null, rec: null };
 }
 function kcalJour(d) {
@@ -375,6 +376,9 @@ const thumb = (r, s = 48) => r ? `<div class="thumb" data-c="${esc(r.categorie)}
 const tags = r => [r.rechauffer && '<span class="chip">À réchauffer</span>', r.froid && '<span class="chip">Se mange froid</span>', r.congele && `<span class="chip good">${svg("snow",12,2)} Se congèle</span>`].filter(Boolean).join("");
 const STAT = { maison: "Maison", bureau: "Bureau", absent: "Absent" };
 const catLabel = c => c.replace("*", "");
+const TRIS = [["az", "A → Z"], ["kcal", "Calories"], ["prix", "Prix / pers."]];
+const triRecettes = l => [...l].sort(UI.recTri === "kcal" ? (a, b) => a.kcal - b.kcal : UI.recTri === "prix" ? (a, b) => coutPortion(a) - coutPortion(b) : (a, b) => a.titre.localeCompare(b.titre, "fr"));
+const triSeg = attrs => `<div class="seg full" role="group" aria-label="Trier les recettes" style="margin-bottom:10px">${TRIS.map(([k, l]) => `<button data-a="rectri" data-v="${k}" ${attrs} aria-pressed="${(UI.recTri || "az") === k}">${l}</button>`).join("")}</div>`;
 
 /* ---------- vues ---------- */
 const TABS = [["accueil","Accueil","home"],["semaine","Semaine","week"],["recettes","Recettes","book"],["courses","Courses","cart"],["stock","Stock","box"],["budget","Budget","coin"]];
@@ -388,7 +392,7 @@ function mealTile(d, which) {
   const day = getDay(d);
   if (which === "midi") {
     const m = day.midi, mi = midiInfo(d), r = mi.rec, off = m.statut === "absent";
-    const meta = off ? (mi.src === "frigo" ? "Gamelle d'hier à congeler ?" : "Pas de repas à prévoir") : mi.src === "congel" ? "Portion du congélateur" : mi.src === "frigo" ? "Gamelle d'hier soir" : (S.stock.congel||[]).some(p=>p.n>0) ? "Toucher pour sortir une portion" : "Pas de gamelle";
+    const meta = off ? (mi.src === "frigo" ? "Gamelle d'hier à congeler ?" : "Pas de repas à prévoir") : mi.src === "congel" ? "Portion du congélateur" : mi.src === "frigo" ? (mi.reste < 2 ? "Gamelle d'hier soir · 1 portion" : "Gamelle d'hier soir") : (S.stock.congel||[]).some(p=>p.n>0) ? "Toucher pour sortir une portion" : "Pas de gamelle";
     return `<button class="meal" data-a="repas" data-d="${d}" data-w="midi" aria-label="Midi, ${esc(r?.titre || "rien de prévu")}, ${STAT[m.statut]}">
       ${thumb(off ? null : r)}<div class="grow"><div class="k">Midi <span class="pill" data-s="${m.statut}">${STAT[m.statut]}</span></div>
       <div class="t ${r && !off ? "" : "none"} clamp2">${r && !off ? esc(r.titre) : off ? "Absent" : "Rien de prévu"}</div><div class="m ellipsis">${meta}</div></div>
@@ -440,8 +444,9 @@ function vSemaine() {
 
 function vRecettes() {
   const cats = ["Toutes", ...new Set(S.rec.map(r => catLabel(r.categorie)))];
-  const list = S.rec.filter(r => UI.recFiltre === "Toutes" || catLabel(r.categorie) === UI.recFiltre);
+  const list = triRecettes(S.rec.filter(r => UI.recFiltre === "Toutes" || catLabel(r.categorie) === UI.recFiltre));
   return `${appbar(`${S.rec.length} recettes · 4 portions chacune`, "Recettes")}
+  ${triSeg("")}
   <div class="chips" role="group" aria-label="Filtrer par catégorie" style="margin-bottom:12px">${cats.map(c => `<button class="chip" data-a="filtre" data-v="${esc(c)}" aria-pressed="${UI.recFiltre===c}">${esc(c)}</button>`).join("")}</div>
   <div class="grid">${list.map(r => `<button class="rcard" data-a="fiche" data-id="${r.id}"><div class="img" data-c="${esc(r.categorie)}">${r.photo ? `<img src="${esc(r.photo)}" alt="">` : esc(r.titre.charAt(0))}</div>
     <div class="b"><div class="t clamp2">${esc(r.titre)}</div><div class="m num">${r.kcal} kcal · ${eur(coutPortion(r))}</div></div></button>`).join("")}</div>`;
@@ -526,9 +531,9 @@ function sheetRepas(d, w) {
   let head, acts = "";
   if (w === "midi") {
     const mi = midiInfo(d), r = mi.rec;
-    head = r ? `<div class="row">${thumb(r,52)}<div class="grow"><div style="font-weight:700">${esc(r.titre)}</div><div class="muted small">${mi.src === "congel" ? "Portion du congélateur" : "Gamelle d'hier soir"} · ${r.kcal} kcal</div></div></div>` : `<p class="muted" style="margin:0">Pas de gamelle pour ce midi.</p>`;
+    head = r ? `<div class="row">${thumb(r,52)}<div class="grow"><div style="font-weight:700">${esc(r.titre)}</div><div class="muted small">${mi.src === "congel" ? "Portion du congélateur" : `Gamelle d'hier soir · ${mi.reste} portion${mi.reste > 1 ? "s" : ""}`} · ${r.kcal} kcal</div></div></div>` : `<p class="muted" style="margin:0">Pas de gamelle pour ce midi.</p>`;
     if (r) acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`);
-    if (mi.src === "frigo" && r?.congele) acts += act("congeler", "snow", "Congeler la gamelle", "2 portions mises de côté", `data-d="${d}"`, m.statut === "absent");
+    if (mi.src === "frigo" && r?.congele) { acts += act("congeler", "snow", mi.reste > 1 ? "Congeler 1 portion" : "Congeler la portion restante", mi.reste > 1 ? "L'autre reste en gamelle" : "Plus de gamelle pour ce midi", `data-d="${d}" data-v="1"`); if (mi.reste > 1) acts += act("congeler", "snow", "Congeler les 2 portions", "Plus de gamelle pour ce midi", `data-d="${d}" data-v="2"`, m.statut === "absent"); }
     if (mi.src === "frigo" && r && !r.congele && m.statut === "absent") acts += `<p class="muted small" style="margin:6px 16px">Cette recette ne se congèle pas.</p>`;
     if (!r && (S.stock.congel||[]).some(p => p.n > 0)) acts += act("sortir", "out", "Sortir du congélateur", "Choisir une portion", `data-d="${d}"`, true);
     if (mi.src === "congel") acts += act("remettre", "inbox", "Remettre au congélateur", "", `data-d="${d}"`);
@@ -556,8 +561,9 @@ function sheetFiche(id) {
 }
 function sheetChoisir(d, mode) {
   const used = new Set(); for (let k = -10; k <= 10; k++) { const s = getDay(add(d, k)).soir; if (s.recette && k) used.add(s.recette); }
-  const list = [...S.rec].sort((a, b) => used.has(a.id) - used.has(b.id) || coutPortion(a) - coutPortion(b));
+  const list = triRecettes(S.rec);
   openSheet(`<div class="label">${mode === "extra" ? "Recette en option" : esc(cap(dateLong(d))) + " · soir"}</div><h2 style="margin:2px 0 12px;font-size:20px">Choisir une recette</h2>
+    ${triSeg(`data-d="${d}" data-m="${mode || ""}"`)}
     <section class="card divide" style="overflow:hidden">${list.map(r => `<button class="pick" data-a="${mode === "extra" ? "pickextra" : "pick"}" data-id="${r.id}" data-d="${d}">${thumb(r, 46)}<div class="grow"><div style="font-weight:700" class="clamp2">${esc(r.titre)}</div><div class="muted small num">${r.kcal} kcal · ${eur(coutPortion(r))} / pers.${used.has(r.id) ? " · déjà au planning" : ""}</div></div></button>`).join("")}</section>`);
 }
 function sheetSortir(d) {
@@ -615,12 +621,13 @@ document.addEventListener("click", e => {
     case "decaler": decaler(d); closeSheet(); break;
     case "retirer": { const s = planDay(d).soir; s.recette = null; s.achete = false; save("plan"); closeSheet(); break; }
     case "remplir": remplir(); break;
-    case "congeler": { const prev = planDay(add(d, -1)).soir; S.stock.congel.push({ id: uid(), rec: prev.recette, n: 2, date: today() }); prev.congele = true; save("stock"); save("plan"); closeSheet(); toast("2 portions au congélateur"); break; }
+    case "congeler": { const prev = planDay(add(d, -1)).soir; const n = Math.min(+v || 1, midiInfo(d).reste || 0); if (!n) return; S.stock.congel.push({ id: uid(), rec: prev.recette, n, date: today() }); prev.congele = (prev.congele === true ? 2 : (+prev.congele || 0)) + n; save("stock"); save("plan"); closeSheet(); toast(n > 1 ? `${n} portions au congélateur` : "1 portion au congélateur"); break; }
     case "sortir": sheetSortir(d); return;
     case "pickcongel": { const p = S.stock.congel.find(x => x.id === id); if (!p || p.n < 1) return; p.n--; const m = planDay(d).midi; m.congel = p.rec; m.congelId = p.id; S.stock.congel = S.stock.congel.filter(x => x.n > 0 || x.id === id); save("stock"); save("plan"); closeSheet(); toast("Portion sortie du congélateur"); break; }
     case "remettre": { const m = planDay(d).midi; const p = S.stock.congel.find(x => x.id === m.congelId); if (p) p.n++; else S.stock.congel.push({ id: uid(), rec: m.congel, n: 1, date: today() }); delete m.congel; delete m.congelId; save("stock"); save("plan"); closeSheet(); break; }
     case "jeter": { const p = S.stock.congel.find(x => x.id === id); if (p) { p.n--; S.stock.congel = S.stock.congel.filter(x => x.n > 0); save("stock"); } break; }
     case "filtre": UI.recFiltre = v; break;
+    case "rectri": UI.recTri = v; if (el.dataset.d) { sheetChoisir(el.dataset.d, el.dataset.m || undefined); render(); return; } break;
     case "tri": UI.coursesTri = v; break;
     case "pris": { S.panier.pris[id] = !S.panier.pris[id]; save("panier"); break; }
     case "prix": { UI.editPrix = id; render(); const inp = $("#prix-" + id); inp?.focus(); inp?.select(); return; }
