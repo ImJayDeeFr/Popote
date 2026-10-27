@@ -15,6 +15,7 @@
   --k1:#E3F1DF; --k1-ink:#2E7A44; --k2:#FDE6EC; --k2-ink:#B23A5B; --k3:#FFF3D2; --k3-ink:#8A6400;
   --fish:#2F6C96; --fish-soft:#E4EFF8; --meat:#B23A5B; --meat-soft:#FDE6EC; --pork:#6E54B8; --pork-soft:#EFEAFB;
   --veg:#2E7A44; --veg-soft:#E3F1DF; --poultry:#8A6400; --poultry-soft:#FFF3D2;
+  --logo-bg:#E3F1DF; --logo-box:#3F9E5A;
   --shadow:none;
   --font:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --display:"Bricolage Grotesque","Lexend",system-ui,sans-serif;
@@ -28,6 +29,7 @@
   --k1:#1E3326; --k1-ink:#8DDBA6; --k2:#3A1F29; --k2-ink:#F49BB4; --k3:#3A3017; --k3-ink:#F2CE6E;
   --fish:#8FC3EA; --fish-soft:#1B2B38; --meat:#F49BB4; --meat-soft:#3A1F29; --pork:#C0AEF0; --pork-soft:#28223D;
   --veg:#8DDBA6; --veg-soft:#1E3326; --poultry:#F2CE6E; --poultry-soft:#3A3017;
+  --logo-bg:#1E3326; --logo-box:#6FCB8E;
   --shadow:none; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#101512; --surface:#18201B; --sunk:#202A24; --line:#28332C; --line-strong:#36433B;
@@ -37,6 +39,7 @@
   --k1:#1E3326; --k1-ink:#8DDBA6; --k2:#3A1F29; --k2-ink:#F49BB4; --k3:#3A3017; --k3-ink:#F2CE6E;
   --fish:#8FC3EA; --fish-soft:#1B2B38; --meat:#F49BB4; --meat-soft:#3A1F29; --pork:#C0AEF0; --pork-soft:#28223D;
   --veg:#8DDBA6; --veg-soft:#1E3326; --poultry:#F2CE6E; --poultry-soft:#3A3017;
+  --logo-bg:#1E3326; --logo-box:#6FCB8E;
   --shadow:none; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
@@ -60,7 +63,10 @@ h3{font-size:15px;font-weight:700}
 .ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 /* barre d'app */
-.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:var(--bg);padding-block:14px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:var(--bg);padding-block:12px 10px;display:flex;flex-direction:column;gap:6px}
+.brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.03em;color:var(--logo-box);flex:none}
+.titlerow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .section-h{display:flex;align-items:baseline;justify-content:space-between;margin:10px 2px 2px}
 /* surfaces */
 .card{background:var(--surface);border:1px solid transparent;border-radius:var(--r-lg)}
@@ -409,7 +415,8 @@ function renderTabs() {
   const al = S.ready ? alertes() : [];
   $("#tabs").innerHTML = `<div class="in">${TABS.map(([k,l,i]) => `<button data-a="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}><span class="ic">${svg(i, 21)}</span><span>${l}</span>${k==="stock" && al.some(a=>a.k!=="frais") ? '<i class="dot"></i>' : ""}</button>`).join("")}</div>`;
 }
-const appbar = (over, title, right = "") => `<header class="appbar"><div class="grow"><div class="over">${over}</div><h1>${title}</h1></div>${right}</header>`;
+const LOGO = `<svg class="logo" width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="var(--logo-bg)"/><path d="M39 36v-5a6 6 0 0 1 6-6h10a6 6 0 0 1 6 6v5" stroke="var(--logo-box)" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="17" y="36" width="66" height="44" rx="13" fill="var(--logo-box)"/><path d="M17 50h66" stroke="var(--logo-bg)" stroke-width="4"/><circle cx="40" cy="65" r="7" fill="#F28AA6"/><path d="M52 70c2-9 10-12 16-10-1 7-8 12-16 10z" fill="#F6C85F"/></svg>`;
+const appbar = (over, title, right = "") => `<header class="appbar"><div class="brandrow"><div class="over grow ellipsis">${over}</div><div class="brand" aria-label="Popote">popote${LOGO}</div></div><div class="titlerow"><h1 class="grow">${title}</h1>${right}</div></header>`;
 
 const kc = r => `<span class="kc">${r.kcal}<span class="muted small" style="font-weight:600"> kcal</span></span>`;
 const persTxt = p => `${p} pers.`;
