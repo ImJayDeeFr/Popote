@@ -376,6 +376,7 @@ const thumb = (r, s = 48) => r ? `<div class="thumb" data-c="${esc(r.categorie)}
 const tags = r => [r.rechauffer && '<span class="chip">À réchauffer</span>', r.froid && '<span class="chip">Se mange froid</span>', r.congele && `<span class="chip good">${svg("snow",12,2)} Se congèle</span>`].filter(Boolean).join("");
 const STAT = { maison: "Maison", bureau: "Bureau", absent: "Absent" };
 const catLabel = c => c.replace("*", "");
+const RAYONS = ["Fruits & légumes","Boucherie & volaille","Poissonnerie","Charcuterie & traiteur","Pains & boulangerie","Crèmerie & fromages","Épicerie","Condiments & sauces","Épices & aides culinaires"];
 const TRIS = [["az", "A → Z"], ["kcal", "Calories"], ["prix", "Prix / pers."]];
 const triRecettes = l => [...l].sort(UI.recTri === "kcal" ? (a, b) => a.kcal - b.kcal : UI.recTri === "prix" ? (a, b) => coutPortion(a) - coutPortion(b) : (a, b) => a.titre.localeCompare(b.titre, "fr"));
 const triSeg = attrs => `<div class="seg full" role="group" aria-label="Trier les recettes" style="margin-bottom:10px">${TRIS.map(([k, l]) => `<button data-a="rectri" data-v="${k}" ${attrs} aria-pressed="${(UI.recTri || "az") === k}">${l}</button>`).join("")}</div>`;
@@ -491,7 +492,7 @@ function vStock() {
       : `<div class="empty">Aucune portion. Quand un midi passe en « Absent », la gamelle peut partir au congélateur depuis le planning.</div>`}
     <div class="section-h"><h2>Placard</h2><span class="muted small">${nPl ? nPl + " à racheter" : "Tout est là"}</span></div>
     <p class="muted small" style="margin:-6px 4px 0">Cochez ce qui est presque fini : ça passe dans la prochaine liste de courses.</p>
-    <section class="card divide">${placard.map(([id, i]) => `<label class="toggle" for="pl-${id}"><input type="checkbox" id="pl-${id}" data-a="placard" data-id="${id}" ${S.stock.placard[id] ? "checked" : ""}><span class="grow">${esc(i.nom)}</span><span class="muted small">${esc(i.rayon.split(" ")[0])}</span></label>`).join("")}</section>
+    <section class="card" style="overflow:hidden">${RAYONS.filter(ry => placard.some(([, i]) => i.rayon === ry)).map(ry => `<div class="group-h"><span class="label">${esc(ry)}</span><span class="muted small">${placard.filter(([id, i]) => i.rayon === ry && S.stock.placard[id]).length || ""}</span></div><div class="divide">${placard.filter(([, i]) => i.rayon === ry).map(([id, i]) => `<label class="toggle" for="pl-${id}"><input type="checkbox" id="pl-${id}" data-a="placard" data-id="${id}" ${S.stock.placard[id] ? "checked" : ""}><span class="grow">${esc(i.nom)}</span></label>`).join("")}</div>`).join("")}</section>
     ${window.POPOTE_PWA ? `<div class="section-h"><h2>Sauvegarde</h2></div><section class="card pad stack tight"><p class="muted small" style="margin:0">Vos menus, dépenses et stocks sont enregistrés sur ce téléphone. Exportez une sauvegarde de temps en temps, surtout avant de changer de téléphone.</p><div class="row wrapline"><button class="btn" data-a="export">${svg("out",16)} Exporter</button><label class="btn" for="import-file">${svg("inbox",16)} Importer<input type="file" id="import-file" accept="application/json,.json" data-a="import" hidden></label></div></section>` : ""}
   </div>`;
 }
