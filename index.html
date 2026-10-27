@@ -240,19 +240,30 @@ const getDay = d => S.plan[d] || { midi: { statut: "maison" }, soir: { statut: "
 const unitPrice = i => i.format_prix / i.format_qte;
 const coutPortion = r => r.lignes.reduce((s, l) => { const i = I(l.ing); return s + (i ? l.qte * unitPrice(i) : 0); }, 0) / 4;
 
+const nbFroz = x => x.congele === true ? 2 : (+x.congele || 0);
+const portionsMidi = m => m.portions || 2;
+const portionsSoir = s => s.portions || 4;
 function midiInfo(d) {
   const m = getDay(d).midi;
+  if (m.recette && R(m.recette)) return { src: "cuisine", rec: R(m.recette), extra: Math.max(0, portionsMidi(m) - 2 - nbFroz(m)) };
   if (m.congel) return { src: "congel", rec: R(m.congel) };
   const prev = getDay(add(d, -1)).soir;
-  const reste = 2 - (prev.congele === true ? 2 : (+prev.congele || 0));
+  const reste = portionsSoir(prev) - 2 - nbFroz(prev);
   if (prev.recette && prev.statut !== "absent" && reste > 0) return { src: "frigo", rec: R(prev.recette), reste };
+  return { src: null, rec: null };
+}
+function soirInfo(d) {
+  const day = getDay(d), s = day.soir;
+  if (s.recette && R(s.recette)) return { src: "cuisine", rec: R(s.recette) };
+  const mi = midiInfo(d);
+  if (mi.src === "cuisine" && mi.extra > 0 && day.midi.statut !== "absent") return { src: "restes", rec: mi.rec, reste: mi.extra };
   return { src: null, rec: null };
 }
 function kcalJour(d) {
   const day = getDay(d); let t = 0, n = 0;
-  const mi = midiInfo(d);
+  const mi = midiInfo(d), si = soirInfo(d);
   if (day.midi.statut !== "absent") { if (mi.rec) { t += mi.rec.kcal; n++; } else if (day.midi.kcal) { t += +day.midi.kcal; n++; } }
-  if (day.soir.statut !== "absent") { const r = R(day.soir.recette); if (r) { t += r.kcal; n++; } else if (day.soir.kcal) { t += +day.soir.kcal; n++; } }
+  if (day.soir.statut !== "absent") { if (si.rec) { t += si.rec.kcal; n++; } else if (day.soir.kcal) { t += +day.soir.kcal; n++; } }
   return { t, n };
 }
 
@@ -273,8 +284,9 @@ function coursesRange() {
 function recettesCourses() {
   const { du, au } = coursesRange(); const out = [];
   for (let d = du; d <= au; d = add(d, 1)) {
-    const s = getDay(d).soir;
-    if (s.recette && s.statut !== "absent" && !s.achete && R(s.recette)) out.push({ key: d, date: d, rec: R(s.recette) });
+    const m = getDay(d).midi, s = getDay(d).soir;
+    if (m.recette && m.statut !== "absent" && !m.achete && R(m.recette)) out.push({ key: d + "m", date: d, rec: R(m.recette), moment: "midi", scale: portionsMidi(m) / 4 });
+    if (s.recette && s.statut !== "absent" && !s.achete && R(s.recette)) out.push({ key: d, date: d, rec: R(s.recette), moment: "soir", scale: portionsSoir(s) / 4 });
   }
   (S.panier.extra || []).forEach((id, k) => R(id) && out.push({ key: "x" + k + id, date: null, rec: R(id), extra: true }));
   return out;
@@ -285,7 +297,7 @@ function listeCourses() {
   recs.forEach(x => x.rec.lignes.forEach(l => {
     const i = I(l.ing); if (!i) return;
     if (i.stock === "À racheter quand c'est fini") return;
-    (need[l.ing] ||= { id: l.ing, qte: 0, recs: new Set() }); need[l.ing].qte += l.qte; need[l.ing].recs.add(x.rec.titre);
+    (need[l.ing] ||= { id: l.ing, qte: 0, recs: new Set() }); need[l.ing].qte += l.qte * (x.scale || 1); need[l.ing].recs.add(x.rec.titre);
   }));
   Object.keys(S.stock.placard || {}).forEach(id => { if (S.stock.placard[id] && I(id)) (need[id] ||= { id, qte: I(id).format_qte, recs: new Set(["Placard"]), placard: true }); });
   const lines = Object.values(need).map(n => {
@@ -311,8 +323,8 @@ function budgetMois(y, m) {
   let prevu = 0, nPrevu = 0;
   const fin = iso(new Date(y, m, 0));
   for (let d = t > `${pre}-01` ? t : `${pre}-01`; d <= fin; d = add(d, 1)) {
-    const s = getDay(d).soir; const r = R(s.recette);
-    if (r && s.statut !== "absent" && !s.achete) { prevu += coutPortion(r) * 4; nPrevu++; }
+    const m = getDay(d).midi, s = getDay(d).soir;
+    [[m, portionsMidi(m)], [s, portionsSoir(s)]].forEach(([x, p]) => { const r = R(x.recette); if (r && x.statut !== "absent" && !x.achete) { prevu += coutPortion(r) * p; nPrevu++; } });
   }
   return { depense, prevu: prevu * facteur(), nPrevu };
 }
@@ -389,22 +401,29 @@ function renderTabs() {
 }
 const appbar = (over, title, right = "") => `<header class="appbar"><div class="grow"><div class="over">${over}</div><h1>${title}</h1></div>${right}</header>`;
 
+const kc = r => `<span class="kc">${r.kcal}<span class="muted small" style="font-weight:600"> kcal</span></span>`;
+const persTxt = p => `${p} pers.`;
 function mealTile(d, which) {
   const day = getDay(d);
   if (which === "midi") {
     const m = day.midi, mi = midiInfo(d), r = mi.rec, off = m.statut === "absent";
-    const meta = off ? (mi.src === "frigo" ? "Gamelle d'hier à congeler ?" : "Pas de repas à prévoir") : mi.src === "congel" ? "Portion du congélateur" : mi.src === "frigo" ? (mi.reste < 2 ? "Gamelle d'hier soir · 1 portion" : "Gamelle d'hier soir") : (S.stock.congel||[]).some(p=>p.n>0) ? "Toucher pour sortir une portion" : "Pas de gamelle";
+    const meta = off ? (mi.src === "frigo" ? "Gamelle d'hier à congeler ?" : mi.src === "cuisine" ? "Recette à déplacer ou retirer" : "Pas de repas à prévoir")
+      : mi.src === "cuisine" ? `À cuisiner · ${persTxt(portionsMidi(m))} · ${esc(r.temps)}${m.achete ? " · acheté" : ""}`
+      : mi.src === "congel" ? "Portion du congélateur" : mi.src === "frigo" ? (mi.reste < 2 ? "Gamelle d'hier soir · 1 portion" : "Gamelle d'hier soir")
+      : "Toucher pour cuisiner ou sortir une portion";
     return `<button class="meal" data-a="repas" data-d="${d}" data-w="midi" aria-label="Midi, ${esc(r?.titre || "rien de prévu")}, ${STAT[m.statut]}">
       ${thumb(off ? null : r)}<div class="grow"><div class="k">Midi <span class="pill" data-s="${m.statut}">${STAT[m.statut]}</span></div>
       <div class="t ${r && !off ? "" : "none"} clamp2">${r && !off ? esc(r.titre) : off ? "Absent" : "Rien de prévu"}</div><div class="m ellipsis">${meta}</div></div>
-      ${r && !off ? `<span class="kc">${r.kcal}<span class="muted small" style="font-weight:600"> kcal</span></span>` : ""}<span class="chev">${svg("chev",18)}</span></button>`;
+      ${r && !off ? kc(r) : ""}<span class="chev">${svg("chev",18)}</span></button>`;
   }
-  const s = day.soir, r = R(s.recette), off = s.statut === "absent";
-  const meta = r ? (off ? "Recette à décaler" : `${esc(r.temps)} · ${eur(coutPortion(r))} / pers.${s.achete ? " · acheté" : ""}`) : off ? "Pas de repas à prévoir" : "Toucher pour choisir une recette";
+  const s = day.soir, si = soirInfo(d), r = si.rec, off = s.statut === "absent";
+  const meta = si.src === "restes" ? (off ? "Restes du midi à congeler ?" : `Restes du midi · ${si.reste} portion${si.reste > 1 ? "s" : ""}`)
+    : r ? (off ? "Recette à décaler" : `${esc(r.temps)} · ${eur(coutPortion(r))} / pers.${portionsSoir(s) !== 4 ? " · " + persTxt(portionsSoir(s)) : ""}${s.achete ? " · acheté" : ""}`)
+    : off ? "Pas de repas à prévoir" : "Toucher pour choisir une recette";
   return `<button class="meal" data-a="repas" data-d="${d}" data-w="soir" aria-label="Soir, ${esc(r?.titre || "rien de prévu")}, ${STAT[s.statut]}">
     ${thumb(r)}<div class="grow"><div class="k">Soir <span class="pill" data-s="${s.statut}">${STAT[s.statut]}</span></div>
     <div class="t ${r ? "" : "none"} clamp2" ${off && r ? 'style="text-decoration:line-through"' : ""}>${r ? esc(r.titre) : off ? "Absent" : "Rien de prévu"}</div><div class="m ellipsis">${meta}</div></div>
-    ${r && !off ? `<span class="kc">${r.kcal}<span class="muted small" style="font-weight:600"> kcal</span></span>` : ""}<span class="chev">${svg("chev",18)}</span></button>`;
+    ${r && !off ? kc(r) : ""}<span class="chev">${svg("chev",18)}</span></button>`;
 }
 
 function vAccueil() {
@@ -472,7 +491,7 @@ function vCourses() {
   <div class="stack">
     <details class="card recs" id="recs" ${UI.recsOpen ? "open" : ""}><summary><div><div style="font-weight:700">${nIncl} recette${nIncl>1?"s":""} dans la liste</div><div class="muted small">Période, recettes en option</div></div><span class="chev muted">${svg("chev",18)}</span></summary>
       <div style="padding:0 16px 10px" class="row wrapline"><label class="small muted" for="c-du">Du</label><input type="date" id="c-du" value="${du}" data-a="range" data-v="du"><label class="small muted" for="c-au">au</label><input type="date" id="c-au" value="${au}" data-a="range" data-v="au"></div>
-      <div class="divide" style="border-top:1px solid var(--line)">${all.map(x => `<label class="toggle" for="inc-${x.key}"><input type="checkbox" id="inc-${x.key}" data-a="incl" data-v="${x.key}" ${S.panier.exclus[x.key] ? "" : "checked"}><span class="grow">${esc(x.rec.titre)}</span>${x.extra ? `<button class="btn text small" data-a="rmextra" data-v="${x.key}">Retirer</button>` : `<span class="muted small">${esc(cap(jour(x.date)))}</span>`}</label>`).join("")}
+      <div class="divide" style="border-top:1px solid var(--line)">${all.map(x => `<label class="toggle" for="inc-${x.key}"><input type="checkbox" id="inc-${x.key}" data-a="incl" data-v="${x.key}" ${S.panier.exclus[x.key] ? "" : "checked"}><span class="grow">${esc(x.rec.titre)}${x.scale && x.scale !== 1 ? ` <span class="muted small">(${x.scale * 4} pers.)</span>` : ""}</span>${x.extra ? `<button class="btn text small" data-a="rmextra" data-v="${x.key}">Retirer</button>` : `<span class="muted small">${esc(cap(jour(x.date)))}${x.moment === "midi" ? " midi" : ""}</span>`}</label>`).join("")}
         <div style="padding:10px 16px"><button class="btn quiet" data-a="addextra">${svg("plus",16)} Recette en option</button></div></div></details>
     ${lines.length ? `<section class="card" style="overflow:hidden">${keys.map(k => `<div class="group-h"><span class="label">${esc(k)}</span><span class="muted small num">${eur(groups[k].filter(l=>!l.assez).reduce((s,l)=>s+l.prix,0))}</span></div><div class="divide">${groups[k].map(line).join("")}</div>`).join("")}</section>
       <p class="muted small" style="margin:0 4px">Prix des paquets entiers (moyenne Carrefour, Auchan, Lidl). Touchez un prix pour le corriger ; sinon le prix estimé est gardé. « J'en ai assez » retire un article du total. Les produits du placard n'apparaissent que si vous les signalez presque finis dans Stock.</p>`
@@ -526,26 +545,45 @@ function vBudget() {
 function openSheet(html) { $("#sheet").innerHTML = `<div class="sheet-bg" data-a="close"><div class="sheet" role="dialog" aria-modal="true" data-stop><div class="grab"></div>${html}</div></div>`; }
 function closeSheet() { $("#sheet").innerHTML = ""; }
 const act = (a, icon, label, sub, extra = "", primary = false) => `<button class="action ${primary ? "primary" : ""}" data-a="${a}" ${extra}><span class="ai">${svg(icon,18)}</span><span class="grow">${label}${sub ? `<span class="sub">${sub}</span>` : ""}</span></button>`;
+const portSeg = (d, w, cur) => `<div class="row between" style="margin:2px 0 10px"><span class="small muted">Cuisiner pour</span><div class="seg" role="group" aria-label="Nombre de portions">${[2, 4].map(p => `<button data-a="portions" data-d="${d}" data-w="${w}" data-v="${p}" aria-pressed="${cur === p}">${p} personnes</button>`).join("")}</div></div>`;
+const recHead = (r, sub) => `<div class="row" style="margin-bottom:12px">${thumb(r,52)}<div class="grow"><div style="font-weight:700">${esc(r.titre)}</div><div class="muted small">${sub}</div></div></div>`;
+const congelActs = (d, src, n, verbe) => n <= 0 ? "" : act("congeler", "snow", n > 1 ? "Congeler 1 portion" : "Congeler la portion restante", n > 1 ? `L'autre reste ${verbe}` : "", `data-d="${d}" data-s="${src}" data-v="1"`) + (n > 1 ? act("congeler", "snow", "Congeler les 2 portions", "", `data-d="${d}" data-s="${src}" data-v="2"`) : "");
 function sheetRepas(d, w) {
   const day = getDay(d), m = day[w];
-  const seg = `<div class="seg full" role="group" aria-label="Statut du repas" style="margin:12px 0 14px">${["maison","bureau","absent"].map(s => `<button data-a="setstatut" data-d="${d}" data-w="${w}" data-v="${s}" aria-pressed="${m.statut===s}">${STAT[s]}</button>`).join("")}</div>`;
-  let head, acts = "";
+  const seg = `<div class="seg full" role="group" aria-label="Statut du repas" style="margin:0 0 14px">${["maison","bureau","absent"].map(s => `<button data-a="setstatut" data-d="${d}" data-w="${w}" data-v="${s}" aria-pressed="${m.statut===s}">${STAT[s]}</button>`).join("")}</div>`;
+  let head = "", acts = "";
   if (w === "midi") {
     const mi = midiInfo(d), r = mi.rec;
-    head = r ? `<div class="row">${thumb(r,52)}<div class="grow"><div style="font-weight:700">${esc(r.titre)}</div><div class="muted small">${mi.src === "congel" ? "Portion du congélateur" : `Gamelle d'hier soir · ${mi.reste} portion${mi.reste > 1 ? "s" : ""}`} · ${r.kcal} kcal</div></div></div>` : `<p class="muted" style="margin:0">Pas de gamelle pour ce midi.</p>`;
-    if (r) acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`);
-    if (mi.src === "frigo" && r?.congele) { acts += act("congeler", "snow", mi.reste > 1 ? "Congeler 1 portion" : "Congeler la portion restante", mi.reste > 1 ? "L'autre reste en gamelle" : "Plus de gamelle pour ce midi", `data-d="${d}" data-v="1"`); if (mi.reste > 1) acts += act("congeler", "snow", "Congeler les 2 portions", "Plus de gamelle pour ce midi", `data-d="${d}" data-v="2"`, m.statut === "absent"); }
-    if (mi.src === "frigo" && r && !r.congele && m.statut === "absent") acts += `<p class="muted small" style="margin:6px 16px">Cette recette ne se congèle pas.</p>`;
-    if (!r && (S.stock.congel||[]).some(p => p.n > 0)) acts += act("sortir", "out", "Sortir du congélateur", "Choisir une portion", `data-d="${d}"`, true);
-    if (mi.src === "congel") acts += act("remettre", "inbox", "Remettre au congélateur", "", `data-d="${d}"`);
+    if (mi.src === "cuisine") {
+      head = recHead(r, `À cuisiner · ${r.kcal} kcal · ${eur(coutPortion(r))} / pers.`) + portSeg(d, "midi", portionsMidi(m));
+      acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`);
+      if (mi.extra > 0) acts += r.congele ? congelActs(d, "midi", mi.extra, "pour ce soir") : `<p class="muted small" style="margin:8px 16px">${mi.extra} portion(s) en plus pour ce soir. Cette recette ne se congèle pas.</p>`;
+      acts += act("choisirmidi", "swap", "Changer de recette", "", `data-d="${d}"`) + act("retirermidi", "trash", "Retirer la recette", "", `data-d="${d}"`);
+    } else {
+      head = r ? recHead(r, `${mi.src === "congel" ? "Portion du congélateur" : `Gamelle d'hier soir · ${mi.reste} portion${mi.reste > 1 ? "s" : ""}`} · ${r.kcal} kcal`) : `<p class="muted" style="margin:0 0 12px">Pas de gamelle pour ce midi.</p>`;
+      if (r) acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`);
+      if (mi.src === "frigo") acts += r?.congele ? congelActs(d, "veille", mi.reste, "en gamelle") : (m.statut === "absent" ? `<p class="muted small" style="margin:8px 16px">Cette recette ne se congèle pas.</p>` : "");
+      if (mi.src === "congel") acts += act("remettre", "inbox", "Remettre au congélateur", "", `data-d="${d}"`);
+      if (!r && (S.stock.congel||[]).some(p => p.n > 0)) acts += act("sortir", "out", "Sortir du congélateur", "Choisir une portion", `data-d="${d}"`, true);
+      acts += act("choisirmidi", "plus", "Cuisiner une recette", r ? "À la place de la gamelle" : "Pour 2 ou 4 personnes", `data-d="${d}"`, !r && !(S.stock.congel||[]).some(p => p.n > 0));
+    }
   } else {
-    const r = R(m.recette);
-    head = r ? `<div class="row">${thumb(r,52)}<div class="grow"><div style="font-weight:700">${esc(r.titre)}</div><div class="muted small">${r.kcal} kcal · ${esc(r.temps)} · ${eur(coutPortion(r))} / pers.</div></div></div>` : `<p class="muted" style="margin:0">Aucune recette prévue.</p>`;
-    if (r) acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`)
-      + act("decaler", "next", "Décaler d'un jour", "Les recettes suivantes glissent aussi", `data-d="${d}"`, m.statut === "absent")
-      + act("choisir", "swap", "Changer de recette", "", `data-d="${d}"`)
-      + act("retirer", "trash", "Retirer la recette", "", `data-d="${d}"`);
-    else acts += act("choisir", "plus", "Choisir une recette", "", `data-d="${d}"`, true);
+    const si = soirInfo(d), r = si.rec;
+    if (si.src === "cuisine") {
+      head = recHead(r, `${r.kcal} kcal · ${esc(r.temps)} · ${eur(coutPortion(r))} / pers.`) + portSeg(d, "soir", portionsSoir(m));
+      acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`)
+        + act("decaler", "next", "Décaler d'un jour", "Les recettes suivantes glissent aussi", `data-d="${d}"`, m.statut === "absent")
+        + act("choisir", "swap", "Changer de recette", "", `data-d="${d}"`)
+        + act("retirer", "trash", "Retirer la recette", "", `data-d="${d}"`);
+    } else if (si.src === "restes") {
+      head = recHead(r, `Restes du midi · ${si.reste} portion${si.reste > 1 ? "s" : ""} · ${r.kcal} kcal`);
+      acts += act("fiche", "doc", "Voir la fiche", "", `data-id="${r.id}"`);
+      if (r.congele) acts += congelActs(d, "midi", si.reste, "pour ce soir");
+      acts += act("choisir", "plus", "Cuisiner une recette", "À la place des restes", `data-d="${d}"`);
+    } else {
+      head = `<p class="muted" style="margin:0 0 12px">Aucune recette prévue.</p>`;
+      acts += act("choisir", "plus", "Choisir une recette", "", `data-d="${d}"`, true);
+    }
   }
   openSheet(`<div class="label">${esc(cap(dateLong(d)))}</div><h2 style="margin:2px 0 12px;font-size:20px">${w === "midi" ? "Midi" : "Soir"}</h2>${head}${seg}<div class="card divide" style="overflow:hidden">${acts}</div>`);
 }
@@ -563,9 +601,9 @@ function sheetFiche(id) {
 function sheetChoisir(d, mode) {
   const used = new Set(); for (let k = -10; k <= 10; k++) { const s = getDay(add(d, k)).soir; if (s.recette && k) used.add(s.recette); }
   const list = triRecettes(S.rec);
-  openSheet(`<div class="label">${mode === "extra" ? "Recette en option" : esc(cap(dateLong(d))) + " · soir"}</div><h2 style="margin:2px 0 12px;font-size:20px">Choisir une recette</h2>
+  openSheet(`<div class="label">${mode === "extra" ? "Recette en option" : esc(cap(dateLong(d))) + (mode === "midi" ? " · midi" : " · soir")}</div><h2 style="margin:2px 0 12px;font-size:20px">Choisir une recette</h2>
     ${triSeg(`data-d="${d}" data-m="${mode || ""}"`)}
-    <section class="card divide" style="overflow:hidden">${list.map(r => `<button class="pick" data-a="${mode === "extra" ? "pickextra" : "pick"}" data-id="${r.id}" data-d="${d}">${thumb(r, 46)}<div class="grow"><div style="font-weight:700" class="clamp2">${esc(r.titre)}</div><div class="muted small num">${r.kcal} kcal · ${eur(coutPortion(r))} / pers.${used.has(r.id) ? " · déjà au planning" : ""}</div></div></button>`).join("")}</section>`);
+    <section class="card divide" style="overflow:hidden">${list.map(r => `<button class="pick" data-a="${mode === "extra" ? "pickextra" : mode === "midi" ? "pickmidi" : "pick"}" data-id="${r.id}" data-d="${d}">${thumb(r, 46)}<div class="grow"><div style="font-weight:700" class="clamp2">${esc(r.titre)}</div><div class="muted small num">${r.kcal} kcal · ${eur(coutPortion(r))} / pers.${used.has(r.id) ? " · déjà au planning" : ""}</div></div></button>`).join("")}</section>`);
 }
 function sheetSortir(d) {
   const congel = (S.stock.congel || []).filter(p => p.n > 0).sort((a, b) => a.date.localeCompare(b.date));
@@ -575,7 +613,7 @@ function sheetSortir(d) {
 /* ---------- actions ---------- */
 function decaler(d) {
   const dates = Object.keys(S.plan).filter(x => x >= d && S.plan[x].soir?.recette).sort().reverse();
-  dates.forEach(x => { const s = S.plan[x].soir; const n = planDay(add(x, 1)).soir; n.recette = s.recette; n.achete = s.achete; n.congele = false; if (n.statut === "absent") n.statut = "maison"; s.recette = null; s.achete = false; });
+  dates.forEach(x => { const s = S.plan[x].soir; const n = planDay(add(x, 1)).soir; n.recette = s.recette; n.achete = s.achete; n.portions = s.portions; n.congele = 0; if (n.statut === "absent") n.statut = "maison"; s.recette = null; s.achete = false; delete s.portions; s.congele = 0; });
   save("plan"); toast("Recettes décalées d'un jour");
 }
 function remplir() {
@@ -596,7 +634,7 @@ async function valider() {
   (S.budget[y] ||= { achats: [] }).achats.push(achat);
   let ingChanged = false;
   prises.forEach(l => { if (l.corrige && l.packs) { S.ing[l.id].format_prix = +(l.prix / l.packs).toFixed(2); S.ing[l.id].source = "Réel"; S.ing[l.id].maj = today(); ingChanged = true; } if (S.stock.placard[l.id]) delete S.stock.placard[l.id]; });
-  recs.forEach(x => { if (x.date) planDay(x.date).soir.achete = true; });
+  recs.forEach(x => { if (x.date) planDay(x.date)[x.moment || "soir"].achete = true; });
   S.panier = { du: null, au: null, exclus: {}, extra: [], pris: {}, assez: {}, prix: {} };
   save("budget-" + y); save("plan"); save("stock"); save("panier"); if (ingChanged) save("ing");
   toast(`Courses validées : ${eur(achat.total)}`);
@@ -622,7 +660,17 @@ document.addEventListener("click", e => {
     case "decaler": decaler(d); closeSheet(); break;
     case "retirer": { const s = planDay(d).soir; s.recette = null; s.achete = false; save("plan"); closeSheet(); break; }
     case "remplir": remplir(); break;
-    case "congeler": { const prev = planDay(add(d, -1)).soir; const n = Math.min(+v || 1, midiInfo(d).reste || 0); if (!n) return; S.stock.congel.push({ id: uid(), rec: prev.recette, n, date: today() }); prev.congele = (prev.congele === true ? 2 : (+prev.congele || 0)) + n; save("stock"); save("plan"); closeSheet(); toast(n > 1 ? `${n} portions au congélateur` : "1 portion au congélateur"); break; }
+    case "congeler": {
+      const src = el.dataset.s === "midi" ? planDay(d).midi : planDay(add(d, -1)).soir;
+      const dispo = el.dataset.s === "midi" ? midiInfo(d).extra : midiInfo(d).reste;
+      const n = Math.min(+v || 1, dispo || 0); if (!n) return;
+      S.stock.congel.push({ id: uid(), rec: src.recette, n, date: today() }); src.congele = nbFroz(src) + n;
+      save("stock"); save("plan"); closeSheet(); toast(n > 1 ? `${n} portions au congélateur` : "1 portion au congélateur"); break; }
+    case "portions": { const w = el.dataset.w; const x = planDay(d)[w]; x.portions = +v; x.congele = 0; save("plan"); render(); sheetRepas(d, w); return; }
+    case "choisirmidi": sheetChoisir(d, "midi"); return;
+    case "pickmidi": { const m = planDay(d).midi; if (m.congel) { const p = S.stock.congel.find(x => x.id === m.congelId); if (p) p.n++; else S.stock.congel.push({ id: uid(), rec: m.congel, n: 1, date: today() }); delete m.congel; delete m.congelId; save("stock"); }
+      m.recette = id; m.portions ||= 2; m.achete = false; m.congele = 0; if (m.statut === "absent") m.statut = "maison"; save("plan"); closeSheet(); toast(`${R(id).titre} : ${jour(d)} midi`); break; }
+    case "retirermidi": { const m = planDay(d).midi; delete m.recette; delete m.portions; m.achete = false; m.congele = 0; save("plan"); closeSheet(); break; }
     case "sortir": sheetSortir(d); return;
     case "pickcongel": { const p = S.stock.congel.find(x => x.id === id); if (!p || p.n < 1) return; p.n--; const m = planDay(d).midi; m.congel = p.rec; m.congelId = p.id; S.stock.congel = S.stock.congel.filter(x => x.n > 0 || x.id === id); save("stock"); save("plan"); closeSheet(); toast("Portion sortie du congélateur"); break; }
     case "remettre": { const m = planDay(d).midi; const p = S.stock.congel.find(x => x.id === m.congelId); if (p) p.n++; else S.stock.congel.push({ id: uid(), rec: m.congel, n: 1, date: today() }); delete m.congel; delete m.congelId; save("stock"); save("plan"); closeSheet(); break; }
