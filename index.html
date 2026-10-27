@@ -262,7 +262,7 @@ function fmtQ(q, u, pp) {
   if (u === "ml") return q >= 1000 ? `${r1(q/1000)} L` : q >= 100 ? `${r1(q/10)} cl` : `${Math.round(q)} ml`;
   if (u === "usage") return "";
   const n = r1(q); const plural = q > 1 && !/s$/.test(u) ? u + "s" : u;
-  return `${n} ${u === "pièce" ? "" : plural}`.trim();
+  return `${n} ${plural}`;
 }
 
 /* liste de courses */
@@ -454,17 +454,17 @@ function vRecettes() {
 
 function vCourses() {
   const { du, au } = coursesRange(); const { lines } = listeCourses(); const all = recettesCourses();
-  const actifs = lines.filter(l => !(l.completer && l.assez));
+  const actifs = lines.filter(l => !l.assez);
   const total = actifs.reduce((s, l) => s + l.prix, 0), prisL = actifs.filter(l => l.pris), pris = prisL.reduce((s, l) => s + l.prix, 0);
   const nIncl = all.filter(x => !S.panier.exclus[x.key]).length;
   const groups = {};
   if (UI.coursesTri === "rayon") lines.forEach(l => (groups[l.ing.rayon] ||= []).push(l)); else lines.forEach(l => [...l.recs].forEach(t => (groups[t] ||= []).push(l)));
   const ORDER = ["Fruits & légumes","Boucherie & volaille","Poissonnerie","Charcuterie & traiteur","Pains & boulangerie","Crèmerie & fromages","Épicerie","Condiments & sauces","Épices & aides culinaires"];
   const keys = Object.keys(groups).sort((a, b) => UI.coursesTri === "rayon" ? ORDER.indexOf(a) - ORDER.indexOf(b) : a.localeCompare(b));
-  const line = l => { const off = l.completer && l.assez; return `<div class="li ${l.pris ? "done" : ""}" ${off ? 'style="opacity:.55"' : ""}>
+  const line = l => { const off = l.assez; return `<div class="li ${l.pris ? "done" : ""}" ${off ? 'style="opacity:.55"' : ""}>
       <button class="check" role="checkbox" aria-checked="${l.pris}" aria-label="Dans le panier : ${esc(l.ing.nom)}" data-a="pris" data-id="${l.id}" ${off ? "disabled" : ""}>${l.pris ? svg("check",16,2.6) : ""}</button>
-      <div class="grow"><div class="name">${esc(l.ing.nom)}</div><div class="muted small">${l.placard ? "Placard presque fini" : esc(fmtQ(l.qte, l.ing.unite, l.ing.poids_piece))}${(l.packs > 1 || l.ing.format_qte !== l.qte) && !l.placard ? ` · ${l.packs} × ${esc(fmtQ(l.ing.format_qte, l.ing.unite) || "1")}` : ""}</div>
-        ${l.completer ? `<label class="row small" style="gap:6px;margin-top:5px;color:var(--ink-2)"><input type="checkbox" id="assez-${l.id}" data-a="assez" data-id="${l.id}" ${l.assez ? "checked" : ""} style="accent-color:var(--accent)"> J'en ai assez</label>` : ""}</div>
+      <div class="grow"><div class="name">${esc(l.ing.nom)}</div><div class="muted small">${l.placard ? "Placard presque fini" : esc(fmtQ(l.qte, l.ing.unite, l.ing.poids_piece))}${(l.packs > 1 || l.ing.format_qte !== l.qte) && !l.placard ? (l.ing.format_qte === 1 ? ` · ${l.packs} à acheter` : ` · ${l.packs} × ${esc(fmtQ(l.ing.format_qte, l.ing.unite) || "1")}`) : ""}</div>
+        ${!l.placard ? `<label class="row small" style="gap:6px;margin-top:5px;color:var(--ink-2)"><input type="checkbox" id="assez-${l.id}" data-a="assez" data-id="${l.id}" ${l.assez ? "checked" : ""} style="accent-color:var(--accent)"> J'en ai assez</label>` : ""}</div>
       ${off ? "" : UI.editPrix === l.id ? `<input class="price-in" id="prix-${l.id}" inputmode="decimal" value="${l.prix.toFixed(2).replace(".",",")}" data-a="prixin" data-id="${l.id}" aria-label="Prix payé pour ${esc(l.ing.nom)}">` : `<button class="price ${l.corrige ? "real" : ""}" data-a="prix" data-id="${l.id}" aria-label="Modifier le prix de ${esc(l.ing.nom)}">${eur(l.prix)}</button>`}
     </div>`; };
   return `${appbar(`Du ${dateCourt(du)} au ${dateCourt(au)}`, "Courses", `<div class="seg" role="group" aria-label="Trier"><button data-a="tri" data-v="rayon" aria-pressed="${UI.coursesTri==="rayon"}">Rayon</button><button data-a="tri" data-v="recette" aria-pressed="${UI.coursesTri==="recette"}">Recette</button></div>`)}
@@ -473,8 +473,8 @@ function vCourses() {
       <div style="padding:0 16px 10px" class="row wrapline"><label class="small muted" for="c-du">Du</label><input type="date" id="c-du" value="${du}" data-a="range" data-v="du"><label class="small muted" for="c-au">au</label><input type="date" id="c-au" value="${au}" data-a="range" data-v="au"></div>
       <div class="divide" style="border-top:1px solid var(--line)">${all.map(x => `<label class="toggle" for="inc-${x.key}"><input type="checkbox" id="inc-${x.key}" data-a="incl" data-v="${x.key}" ${S.panier.exclus[x.key] ? "" : "checked"}><span class="grow">${esc(x.rec.titre)}</span>${x.extra ? `<button class="btn text small" data-a="rmextra" data-v="${x.key}">Retirer</button>` : `<span class="muted small">${esc(cap(jour(x.date)))}</span>`}</label>`).join("")}
         <div style="padding:10px 16px"><button class="btn quiet" data-a="addextra">${svg("plus",16)} Recette en option</button></div></div></details>
-    ${lines.length ? `<section class="card" style="overflow:hidden">${keys.map(k => `<div class="group-h"><span class="label">${esc(k)}</span><span class="muted small num">${eur(groups[k].filter(l=>!(l.completer&&l.assez)).reduce((s,l)=>s+l.prix,0))}</span></div><div class="divide">${groups[k].map(line).join("")}</div>`).join("")}</section>
-      <p class="muted small" style="margin:0 4px">Prix des paquets entiers (moyenne Carrefour, Auchan, Lidl). Touchez un prix pour le corriger ; sinon le prix estimé est gardé. Les produits du placard n'apparaissent que si vous les signalez presque finis dans Stock.</p>`
+    ${lines.length ? `<section class="card" style="overflow:hidden">${keys.map(k => `<div class="group-h"><span class="label">${esc(k)}</span><span class="muted small num">${eur(groups[k].filter(l=>!l.assez).reduce((s,l)=>s+l.prix,0))}</span></div><div class="divide">${groups[k].map(line).join("")}</div>`).join("")}</section>
+      <p class="muted small" style="margin:0 4px">Prix des paquets entiers (moyenne Carrefour, Auchan, Lidl). Touchez un prix pour le corriger ; sinon le prix estimé est gardé. « J'en ai assez » retire un article du total. Les produits du placard n'apparaissent que si vous les signalez presque finis dans Stock.</p>`
       : `<div class="empty"><div style="font-weight:700;color:var(--ink)">Liste vide</div><p style="margin:6px 0 12px">Elle se remplit avec les recettes du planning sur la période choisie.</p><button class="btn primary" data-a="tab" data-v="semaine">Planifier la semaine</button></div>`}
   </div>
   ${lines.length ? `<div class="sticky-foot"><div class="in"><div class="grow"><div class="row between small"><span class="muted">${prisL.length} / ${actifs.length} articles</span><span class="muted num">${eur(pris)}</span></div><div class="meter good" style="margin:5px 0 4px"><i style="width:${actifs.length ? prisL.length/actifs.length*100 : 0}%"></i></div><div style="font-weight:800" class="num">Total ${eur(total)}</div></div><button class="btn primary" data-a="valider" ${prisL.length ? "" : "disabled"}>Valider</button></div></div>` : ""}`;
@@ -588,7 +588,7 @@ function remplir() {
   save("plan"); toast("Semaine remplie, modifiable à tout moment");
 }
 async function valider() {
-  const { recs, lines } = listeCourses(); const prises = lines.filter(l => l.pris && !(l.completer && l.assez)); if (!prises.length) return;
+  const { recs, lines } = listeCourses(); const prises = lines.filter(l => l.pris && !l.assez); if (!prises.length) return;
   const d = today(), y = d.slice(0, 4);
   const achat = { id: uid(), date: d, total: +prises.reduce((s, l) => s + l.prix, 0).toFixed(2), estime: +prises.reduce((s, l) => s + l.estime, 0).toFixed(2),
     articles: prises.map(l => ({ ing: l.id, nom: l.ing.nom, packs: l.packs, prix: +l.prix.toFixed(2), corrige: l.corrige })), recettes: recs.filter(x => x.date).map(x => x.date) };
