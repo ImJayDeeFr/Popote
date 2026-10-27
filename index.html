@@ -1,38 +1,42 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#FBFCFA" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121614" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Popote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Lexend:wght@400;500;600&display=swap">
 <style>
 /* Layout : appli mobile une colonne, barre d'app collante en haut, onglets en bas, feuilles d'action pour chaque repas */
 :root{
-  --bg:#FBFCFA; --surface:#FFFFFF; --sunk:#F1F5F0; --line:#E4EAE1; --line-strong:#D1DACC;
-  --ink:#1C2420; --ink-2:#435049; --muted:#6D7A72;
-  --accent:#2E9D6A; --accent-strong:#23855A; --accent-ink:#FFFFFF; --accent-soft:#E2F4E9;
-  --good:#3A9A5B; --good-soft:#E5F4EA; --warn:#C9781A; --warn-soft:#FFF1DC;
-  --fish:#3A86C8; --fish-soft:#E4F0FB; --meat:#DD5C7A; --meat-soft:#FDE8EE; --pork:#8A6BD1; --pork-soft:#EFEAFB;
-  --veg:#4E9E4E; --veg-soft:#E6F5E1; --poultry:#C98A0E; --poultry-soft:#FFF4D4;
-  --shadow:0 1px 2px rgba(28,36,32,.05),0 2px 8px rgba(28,36,32,.04);
-  --font:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --r-lg:18px; --r:14px; --r-sm:10px; --tab-h:62px;
+  --bg:#FFFFFF; --surface:#F6FAF4; --sunk:#EDF3EA; --line:#E3EAE0; --line-strong:#CFD9CB;
+  --ink:#1F2A22; --ink-2:#43504A; --muted:#66756B;
+  --accent:#2F8A4F; --accent-strong:#23703E; --accent-ink:#FFFFFF; --accent-soft:#E3F1DF;
+  --good:#2F8A4F; --good-soft:#E3F1DF; --warn:#9A6200; --warn-soft:#FFF3D2;
+  --k1:#E3F1DF; --k1-ink:#2E7A44; --k2:#FDE6EC; --k2-ink:#B23A5B; --k3:#FFF3D2; --k3-ink:#8A6400;
+  --fish:#2F6C96; --fish-soft:#E4EFF8; --meat:#B23A5B; --meat-soft:#FDE6EC; --pork:#6E54B8; --pork-soft:#EFEAFB;
+  --veg:#2E7A44; --veg-soft:#E3F1DF; --poultry:#8A6400; --poultry-soft:#FFF3D2;
+  --shadow:none;
+  --font:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Bricolage Grotesque","Lexend",system-ui,sans-serif;
+  --r-lg:22px; --r:18px; --r-sm:12px; --tab-h:64px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121614; --surface:#1A201D; --sunk:#222A26; --line:#2C3530; --line-strong:#39443E;
-  --ink:#EEF3EF; --ink-2:#C9D3CD; --muted:#93A099;
-  --accent:#6FD3A0; --accent-strong:#8CE0B5; --accent-ink:#0F1A14; --accent-soft:#1E3529;
-  --good:#7FD18F; --good-soft:#1F3324; --warn:#F2B35E; --warn-soft:#3A2C17;
-  --fish:#8CC2F0; --fish-soft:#1B2C3B; --meat:#F28FA7; --meat-soft:#3A1F27; --pork:#B9A3F0; --pork-soft:#2A2340;
-  --veg:#93D18A; --veg-soft:#213320; --poultry:#F2C55C; --poultry-soft:#3A3016;
+  --bg:#101512; --surface:#18201B; --sunk:#202A24; --line:#28332C; --line-strong:#36433B;
+  --ink:#EEF4EF; --ink-2:#C7D2CA; --muted:#93A198;
+  --accent:#6FCB8E; --accent-strong:#8DDBA6; --accent-ink:#0E1A12; --accent-soft:#1E3326;
+  --good:#7FD39A; --good-soft:#1E3326; --warn:#F0B95E; --warn-soft:#382C17;
+  --k1:#1E3326; --k1-ink:#8DDBA6; --k2:#3A1F29; --k2-ink:#F49BB4; --k3:#3A3017; --k3-ink:#F2CE6E;
+  --fish:#8FC3EA; --fish-soft:#1B2B38; --meat:#F49BB4; --meat-soft:#3A1F29; --pork:#C0AEF0; --pork-soft:#28223D;
+  --veg:#8DDBA6; --veg-soft:#1E3326; --poultry:#F2CE6E; --poultry-soft:#3A3017;
   --shadow:none; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121614; --surface:#1A201D; --sunk:#222A26; --line:#2C3530; --line-strong:#39443E;
-  --ink:#EEF3EF; --ink-2:#C9D3CD; --muted:#93A099;
-  --accent:#6FD3A0; --accent-strong:#8CE0B5; --accent-ink:#0F1A14; --accent-soft:#1E3529;
-  --good:#7FD18F; --good-soft:#1F3324; --warn:#F2B35E; --warn-soft:#3A2C17;
-  --fish:#8CC2F0; --fish-soft:#1B2C3B; --meat:#F28FA7; --meat-soft:#3A1F27; --pork:#B9A3F0; --pork-soft:#2A2340;
-  --veg:#93D18A; --veg-soft:#213320; --poultry:#F2C55C; --poultry-soft:#3A3016;
+  --bg:#101512; --surface:#18201B; --sunk:#202A24; --line:#28332C; --line-strong:#36433B;
+  --ink:#EEF4EF; --ink-2:#C7D2CA; --muted:#93A198;
+  --accent:#6FCB8E; --accent-strong:#8DDBA6; --accent-ink:#0E1A12; --accent-soft:#1E3326;
+  --good:#7FD39A; --good-soft:#1E3326; --warn:#F0B95E; --warn-soft:#382C17;
+  --k1:#1E3326; --k1-ink:#8DDBA6; --k2:#3A1F29; --k2-ink:#F49BB4; --k3:#3A3017; --k3-ink:#F2CE6E;
+  --fish:#8FC3EA; --fish-soft:#1B2B38; --meat:#F49BB4; --meat-soft:#3A1F29; --pork:#C0AEF0; --pork-soft:#28223D;
+  --veg:#8DDBA6; --veg-soft:#1E3326; --poultry:#F2CE6E; --poultry-soft:#3A3017;
   --shadow:none; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
@@ -44,8 +48,8 @@ button{cursor:pointer;-webkit-appearance:none}
 .wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(var(--tab-h) + 24px + env(safe-area-inset-bottom,0px))}
 .wrap.has-foot{padding-bottom:calc(var(--tab-h) + 96px + env(safe-area-inset-bottom,0px))}
 h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.015em}
-h1{font-size:26px;font-weight:800;line-height:1.15}
-h2{font-size:17px;font-weight:700}
+h1{font-family:var(--display);font-size:30px;font-weight:800;line-height:1.1;letter-spacing:-.025em}
+h2{font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.015em}
 h3{font-size:15px;font-weight:700}
 .over{font-size:12px;font-weight:600;color:var(--muted)}
 .label{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -59,11 +63,11 @@ h3{font-size:15px;font-weight:700}
 .appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:var(--bg);padding-block:14px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .section-h{display:flex;align-items:baseline;justify-content:space-between;margin:10px 2px 2px}
 /* surfaces */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.card{background:var(--surface);border:1px solid transparent;border-radius:var(--r-lg)}
 .pad{padding:14px 16px}
 .divide>*+*{border-top:1px solid var(--line)}
 /* boutons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);padding:9px 14px;font-weight:600;font-size:14px;min-height:40px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-strong);background:var(--bg);border-radius:999px;padding:9px 14px;font-weight:600;font-size:14px;min-height:40px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.primary:active{background:var(--accent-strong)}
 .btn.quiet{border-color:transparent;background:var(--sunk)}
@@ -82,7 +86,7 @@ button.chip{padding:7px 13px;font-size:13px;border-color:var(--line)}
 button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chip.good{background:var(--good-soft);color:var(--good)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.accent{background:var(--accent-soft);color:var(--accent)}
 /* vignettes */
-.thumb{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;flex:none;overflow:hidden;font-weight:800;font-size:18px;background:var(--poultry-soft);color:var(--poultry)}
+.thumb{width:48px;height:48px;border-radius:16px;font-family:var(--display);display:grid;place-items:center;flex:none;overflow:hidden;font-weight:800;font-size:18px;background:var(--poultry-soft);color:var(--poultry)}
 .thumb img{width:100%;height:100%;object-fit:cover}
 .thumb[data-c="Poisson"]{background:var(--fish-soft);color:var(--fish)}
 .thumb[data-c="Bœuf"]{background:var(--meat-soft);color:var(--meat)}
@@ -94,10 +98,10 @@ button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-co
 .meal{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;padding:12px 16px;min-height:72px}
 .meal:active{background:var(--sunk)}
 .meal .k{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);display:flex;gap:6px;align-items:center}
-.meal .t{font-weight:700;font-size:15.5px;line-height:1.25;margin-top:1px}
+.meal .t{font-weight:600;font-size:15px;line-height:1.3;margin-top:1px}
 .meal .m{font-size:13px;color:var(--muted);margin-top:1px}
 .meal .t.none{color:var(--muted);font-weight:600}
-.meal .kc{font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;white-space:nowrap}
+.meal .kc{font-family:var(--display);font-variant-numeric:tabular-nums;font-weight:800;font-size:16px;white-space:nowrap}
 .meal .chev{color:var(--line-strong);flex:none}
 .pill{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:6px;background:var(--sunk);color:var(--muted)}
 .pill[data-s="bureau"]{background:var(--good-soft);color:var(--good)}
@@ -105,9 +109,12 @@ button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-co
 .foot-total{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--sunk);border-radius:0 0 var(--r-lg) var(--r-lg);font-weight:600;font-size:14px}
 /* kpi */
 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);text-align:left;min-width:0}
+.kpi{background:var(--surface);border:1px solid transparent;border-radius:var(--r);padding:12px;text-align:left;min-width:0}
 button.kpi:active{background:var(--sunk)}
-.kpi .v{font-size:20px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px}
+.kpi .v{font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:3px}
+.kpi.k1{background:var(--k1);border-color:transparent}.kpi.k1 .v,.kpi.k1 .label{color:var(--k1-ink)}
+.kpi.k2{background:var(--k2);border-color:transparent}.kpi.k2 .v,.kpi.k2 .label{color:var(--k2-ink)}
+.kpi.k3{background:var(--k3);border-color:transparent}.kpi.k3 .v,.kpi.k3 .label{color:var(--k3-ink)}
 .kpi .s{font-size:12px;color:var(--muted)}
 .meter{height:6px;border-radius:4px;background:var(--sunk);overflow:hidden;display:flex}
 .meter i{display:block;height:100%;background:var(--accent)}
@@ -120,20 +127,20 @@ button.kpi:active{background:var(--sunk)}
 /* semaine */
 .weeknav{display:flex;align-items:center;gap:6px}
 .daycard .dh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 4px}
-.daycard .dh .d{font-weight:800;font-size:15px}
+.daycard .dh .d{font-family:var(--display);font-weight:800;font-size:16px}
 .daycard.is-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .todaytag{font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent);padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:1px}
 /* recettes */
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.rcard{display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-.rcard .img{aspect-ratio:4/3;width:100%;max-width:100%;display:grid;place-items:center;font-size:34px;font-weight:800;background:var(--poultry-soft);color:var(--poultry)}
+.rcard{display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;background:var(--surface);border:0;border-radius:var(--r)}
+.rcard .img{aspect-ratio:4/3;width:100%;max-width:100%;display:grid;place-items:center;font-family:var(--display);font-size:38px;font-weight:800;background:var(--poultry-soft);color:var(--poultry)}
 .rcard .img[data-c="Poisson"]{background:var(--fish-soft);color:var(--fish)}
 .rcard .img[data-c="Bœuf"]{background:var(--meat-soft);color:var(--meat)}
 .rcard .img[data-c="Porc"]{background:var(--pork-soft);color:var(--pork)}
 .rcard .img[data-c^="Végé"]{background:var(--veg-soft);color:var(--veg)}
 .rcard .img img{width:100%;height:100%;object-fit:cover}
 .rcard .b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
-.rcard .t{font-weight:700;font-size:14px;line-height:1.25}
+.rcard .t{font-weight:600;font-size:14px;line-height:1.3}
 .rcard .m{font-size:12.5px;color:var(--muted)}
 /* listes */
 .li{display:flex;gap:12px;align-items:center;padding:12px 16px}
@@ -143,7 +150,7 @@ button.kpi:active{background:var(--sunk)}
 .li .name{font-weight:600}
 .group-h{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px 6px;background:var(--sunk);border-top:1px solid var(--line)}
 .group-h:first-child{border-top:0;border-radius:var(--r-lg) var(--r-lg) 0 0}
-.price{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;border:1px solid var(--line);background:var(--surface);padding:5px 8px;border-radius:8px;min-width:70px;text-align:right}
+.price{font-family:var(--display);font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap;border:1px solid var(--line);background:var(--surface);padding:5px 8px;border-radius:8px;min-width:70px;text-align:right}
 .price.real{color:var(--good);border-color:var(--good)}
 .price-in{width:84px;padding:6px 8px;border:2px solid var(--accent);border-radius:8px;text-align:right;background:var(--surface)}
 .toggle{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;cursor:pointer}
@@ -180,7 +187,7 @@ nav.tabs .dot{position:absolute;top:8px;right:calc(50% - 20px);width:8px;height:
 .steps li::before{counter-increment:s;content:counter(s);width:26px;height:26px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:13px}
 .ings{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:14px}
 @media (max-width:380px){.ings{grid-template-columns:1fr}.kpi .v{font-size:18px}}
-.hero-img{aspect-ratio:16/9;width:100%;max-width:100%;border-radius:var(--r-lg);display:grid;place-items:center;font-size:56px;font-weight:800;overflow:hidden}
+.hero-img{aspect-ratio:16/9;width:100%;max-width:100%;border-radius:var(--r-lg);display:grid;place-items:center;font-family:var(--display);font-size:64px;font-weight:800;overflow:hidden}
 .hero-img img{width:100%;height:100%;object-fit:cover}
 .bars{display:flex;align-items:flex-end;gap:8px;height:140px;padding:8px 2px 0}
 .bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;min-width:0}
@@ -442,9 +449,9 @@ function vAccueil() {
       <div class="foot-total"><span class="row" style="gap:6px">${svg("flame",16)} Total de la journée</span><span class="num">${k.n ? k.t.toLocaleString("fr-FR") + " kcal" : "—"}</span></div></section>
     ${al.map(a => `<div class="alert" role="status">${svg("warn",18)}<span>${esc(a.txt)}</span></div>`).join("")}
     <div class="kpis">
-      <button class="kpi" data-a="tab" data-v="budget"><div class="label">Budget mois</div><div class="v">${eur0(tot)}</div><div class="s">${eur0(b.depense)} dépensés</div></button>
-      <button class="kpi" data-a="tab" data-v="semaine"><div class="label">Semaine</div><div class="v">${plan7}<span class="muted" style="font-size:14px;font-weight:600"> / 7</span></div><div class="s">soirs planifiés</div></button>
-      <button class="kpi" data-a="tab" data-v="stock"><div class="label">Congélateur</div><div class="v">${congel}</div><div class="s">portion${congel>1?"s":""}</div></button>
+      <button class="kpi k1" data-a="tab" data-v="budget"><div class="label">Budget mois</div><div class="v">${eur0(tot)}</div><div class="s">${eur0(b.depense)} dépensés</div></button>
+      <button class="kpi k2" data-a="tab" data-v="semaine"><div class="label">Semaine</div><div class="v">${plan7}<span class="muted" style="font-size:14px;font-weight:600"> / 7</span></div><div class="s">soirs planifiés</div></button>
+      <button class="kpi k3" data-a="tab" data-v="stock"><div class="label">Congélateur</div><div class="v">${congel}</div><div class="s">portion${congel>1?"s":""}</div></button>
     </div>
     <div class="section-h"><h2>Demain</h2><span class="muted small">${esc(cap(dateLong(demain)))}</span></div>
     <section class="card"><div class="divide">${mealTile(demain, "midi")}${mealTile(demain, "soir")}</div></section>
@@ -458,7 +465,7 @@ function vSemaine() {
   const cout = days.reduce((s, d) => { const x = getDay(d).soir, r = R(x.recette); return s + (r && x.statut !== "absent" ? coutPortion(r) * 4 : 0); }, 0);
   return `${appbar(`Du ${dateCourt(ws)} au ${dateCourt(we)}`, "Planning", `<div class="weeknav"><button class="btn icon quiet" data-a="week" data-v="-7" aria-label="Semaine précédente">${svg("back",18)}</button><button class="btn quiet" data-a="week" data-v="0" style="padding-inline:10px">Auj.</button><button class="btn icon quiet" data-a="week" data-v="7" aria-label="Semaine suivante">${svg("chev",18)}</button></div>`)}
   <div class="stack">
-    <div class="card pad row between"><div><div class="label">Coût des recettes</div><div style="font-weight:800;font-size:18px" class="num">${eur(cout)}</div></div>${vides ? `<button class="btn primary" data-a="remplir">${svg("spark",16)} Remplir ${vides} soir${vides>1?"s":""}</button>` : `<span class="chip good">${svg("check",12,2.4)} Semaine complète</span>`}</div>
+    <div class="card pad row between"><div><div class="label">Coût des recettes</div><div style="font-family:var(--display);font-weight:800;font-size:22px" class="num">${eur(cout)}</div></div>${vides ? `<button class="btn primary" data-a="remplir">${svg("spark",16)} Remplir ${vides} soir${vides>1?"s":""}</button>` : `<span class="chip good">${svg("check",12,2.4)} Semaine complète</span>`}</div>
     ${days.map(d => { const k = kcalJour(d); return `<section class="card daycard ${d === t ? "is-today" : ""}" aria-label="${esc(dateLong(d))}">
       <div class="dh"><span class="d">${cap(jour(d))} <span class="muted" style="font-weight:600">${dateCourt(d)}</span>${d === t ? '<span class="todaytag">Aujourd\'hui</span>' : ""}</span><span class="muted small num" style="font-weight:600">${k.n ? k.t.toLocaleString("fr-FR") + " kcal" : ""}</span></div>
       <div class="divide">${mealTile(d, "midi")}${mealTile(d, "soir")}</div></section>`; }).join("")}
@@ -531,7 +538,7 @@ function vBudget() {
   <div class="stack">
     <section class="card pad stack">
       <div class="row between"><span class="label">${cap(MOIS[m-1])} ${y}</span><span class="muted small">remis à zéro le 1er</span></div>
-      <div style="font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1" class="num">${eur0(tot)}</div>
+      <div style="font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1" class="num">${eur0(tot)}</div>
       <div class="meter" aria-hidden="true" style="height:8px"><i style="width:${tot ? b.depense/tot*100 : 0}%"></i><i class="ghost" style="width:${tot ? b.prevu/tot*100 : 0}%"></i></div>
       <div class="row between small"><span class="legend"><span><b></b>Dépensé <strong class="num" style="color:var(--ink)">${eur(b.depense)}</strong></span></span><span class="legend"><span><b style="opacity:.3"></b>Prévu <strong class="num" style="color:var(--ink)">${eur(b.prevu)}</strong></span></span></div>
       <p class="muted small" style="margin:0">${b.nPrevu} recette${b.nPrevu>1?"s":""} planifiée${b.nPrevu>1?"s":""} pas encore achetée${b.nPrevu>1?"s":""} d'ici la fin du mois. Prévision recalée sur 3 mois : ${f === 1 ? "pas encore assez de courses validées." : `vous payez en moyenne ${f > 1 ? "+" : ""}${Math.round((f - 1) * 100)} % par rapport à l'estimation.`}</p>
@@ -602,7 +609,7 @@ function sheetFiche(id, back = null) {
   const libres = Array.from({ length: 10 }, (_, i) => add(today(), i)).filter(d => !getDay(d).soir.recette && getDay(d).soir.statut !== "absent").slice(0, 6);
   openSheet(`<div class="hero-img thumb" data-c="${esc(r.categorie)}" style="width:100%;height:auto">${r.photo ? `<img src="${esc(r.photo)}" alt="">` : esc(r.titre.charAt(0))}</div>
     <div class="label" style="margin-top:14px">${esc(catLabel(r.categorie))} · cahier p. ${esc(r.page)}</div><h2 style="font-size:22px;margin-top:2px">${esc(r.titre)}</h2><div class="muted" style="margin-top:2px">${esc(r.sous_titre || "")}</div>
-    <div class="kpis" style="margin:14px 0 10px"><div class="kpi"><div class="label">Énergie</div><div class="v">${r.kcal}</div><div class="s">kcal / pers.</div></div><div class="kpi"><div class="label">Coût</div><div class="v">${eur(coutPortion(r)).replace(" €","")}</div><div class="s">€ / pers.</div></div><div class="kpi"><div class="label">Temps</div><div class="v">${esc(r.temps.replace(" min",""))}</div><div class="s">minutes</div></div></div>
+    <div class="kpis" style="margin:14px 0 10px"><div class="kpi k1"><div class="label">Énergie</div><div class="v">${r.kcal}</div><div class="s">kcal / pers.</div></div><div class="kpi k3"><div class="label">Coût</div><div class="v">${eur(coutPortion(r)).replace(" €","")}</div><div class="s">€ / pers.</div></div><div class="kpi k2"><div class="label">Temps</div><div class="v">${esc(r.temps.replace(" min",""))}</div><div class="s">minutes</div></div></div>
     <div class="row wrapline" style="gap:6px;margin-bottom:16px">${tags(r)}</div>
     <section class="card pad" style="margin-bottom:12px"><div class="row between" style="margin-bottom:10px"><h3>Ingrédients</h3><span class="muted small">pour 4</span></div><div class="ings">${r.lignes.map(l => `<div>${esc(l.texte)}</div>`).join("")}</div></section>
     <section class="card pad"><h3 style="margin-bottom:12px">Préparation</h3><ol class="steps">${r.etapes.map(e => `<li><div><div style="font-weight:700">${esc(e.titre)}</div><div style="color:var(--ink-2)">${esc(e.texte)}</div></div></li>`).join("")}</ol></section>
