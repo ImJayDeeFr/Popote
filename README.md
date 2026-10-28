@@ -1,4 +1,4 @@
-# Popote
+# Rataplan
 
 Menus de la semaine, gamelles et congélateur, liste de courses en panier et budget alimentaire, à partir du cahier de recettes.
 

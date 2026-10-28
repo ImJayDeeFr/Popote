@@ -2,7 +2,7 @@
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
-<title>Popote</title>
+<title>Rataplan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Lexend:wght@400;500;600&display=swap">
 <style>
@@ -206,7 +206,7 @@ input[type=date]{border:1px solid var(--line-strong);background:var(--surface);b
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s cubic-bezier(.2,.8,.2,1)}@keyframes up{from{transform:translateY(40px);opacity:.5}}}
 </style>
 
-<div id="app"><div class="wrap"><div class="appbar"><div><div class="over">Popote</div><h1>Chargement…</h1></div></div><p class="muted">Récupération de vos recettes et de votre planning.</p></div></div>
+<div id="app"><div class="wrap"><div class="appbar"><div><div class="over">Rataplan</div><h1>Chargement…</h1></div></div><p class="muted">Récupération de vos recettes et de votre planning.</p></div></div>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
 <div id="sheet"></div>
 <div id="toast" hidden></div>
@@ -416,7 +416,7 @@ function renderTabs() {
   $("#tabs").innerHTML = `<div class="in">${TABS.map(([k,l,i]) => `<button data-a="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}><span class="ic">${svg(i, 21)}</span><span>${l}</span>${k==="stock" && al.some(a=>a.k!=="frais") ? '<i class="dot"></i>' : ""}</button>`).join("")}</div>`;
 }
 const LOGO = `<svg class="logo" width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="var(--logo-bg)"/><path d="M39 36v-5a6 6 0 0 1 6-6h10a6 6 0 0 1 6 6v5" stroke="var(--logo-box)" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="17" y="36" width="66" height="44" rx="13" fill="var(--logo-box)"/><path d="M17 50h66" stroke="var(--logo-bg)" stroke-width="4"/><circle cx="40" cy="65" r="7" fill="#F28AA6"/><path d="M52 70c2-9 10-12 16-10-1 7-8 12-16 10z" fill="#F6C85F"/></svg>`;
-const appbar = (over, title, right = "") => `<header class="appbar"><div class="brandrow"><div class="over grow ellipsis">${over}</div><div class="brand" aria-label="Popote">popote${LOGO}</div></div><div class="titlerow"><h1 class="grow">${title}</h1>${right}</div></header>`;
+const appbar = (over, title, right = "") => `<header class="appbar"><div class="brandrow"><div class="over grow ellipsis">${over}</div><div class="brand" aria-label="Rataplan">rataplan${LOGO}</div></div><div class="titlerow"><h1 class="grow">${title}</h1>${right}</div></header>`;
 
 const kc = r => `<span class="kc">${r.kcal}<span class="muted small" style="font-weight:600"> kcal</span></span>`;
 const persTxt = p => `${p} pers.`;
@@ -742,7 +742,7 @@ function render() {
   renderTabs();
   const app = $("#app");
   if (!S.ready) {
-    app.innerHTML = `<div class="wrap">${appbar("Popote", S.offline ? "Données indisponibles" : "Chargement…")}<p class="muted">${S.offline ? (window.POPOTE_PWA ? "Connectez-vous à internet pour le premier chargement des recettes." : "L'application doit être ouverte depuis Claude, connecté, pour lire vos recettes et votre planning.") : "Récupération de vos recettes et de votre planning."}</p></div>`;
+    app.innerHTML = `<div class="wrap">${appbar("Rataplan", S.offline ? "Données indisponibles" : "Chargement…")}<p class="muted">${S.offline ? (window.POPOTE_PWA ? "Connectez-vous à internet pour le premier chargement des recettes." : "L'application doit être ouverte depuis Claude, connecté, pour lire vos recettes et votre planning.") : "Récupération de vos recettes et de votre planning."}</p></div>`;
     return;
   }
   const v = { accueil: vAccueil, semaine: vSemaine, recettes: vRecettes, courses: vCourses, stock: vStock, budget: vBudget }[UI.tab];
@@ -778,18 +778,18 @@ function makeLocalDB() {
   }) };
 }
 window.popoteExport = () => {
-  const out = { app: "popote", version: 1, exporte: new Date().toISOString(), cles: {} };
+  const out = { app: "rataplan", version: 1, exporte: new Date().toISOString(), cles: {} };
   try { for (let k = 0; k < localStorage.length; k++) { const key = localStorage.key(k); if (key.startsWith("popote:")) out.cles[key] = localStorage.getItem(key); } } catch {}
   const url = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: "application/json" }));
-  const a = document.createElement("a"); a.href = url; a.download = `popote-sauvegarde-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement("a"); a.href = url; a.download = `rataplan-sauvegarde-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000); toast("Sauvegarde exportée");
 };
 window.popoteImport = async f => {
   try {
-    const d = JSON.parse(await f.text()); if (d.app !== "popote" || !d.cles) throw 0;
+    const d = JSON.parse(await f.text()); if (!["popote", "rataplan"].includes(d.app) || !d.cles) throw 0;
     Object.entries(d.cles).forEach(([k, v]) => k.startsWith("popote:") && localStorage.setItem(k, v));
     toast("Sauvegarde importée"); setTimeout(() => location.reload(), 600);
-  } catch { toast("Ce fichier n'est pas une sauvegarde Popote."); }
+  } catch { toast("Ce fichier n'est pas une sauvegarde Rataplan."); }
 };
 
 /* ---------- démarrage ---------- */
